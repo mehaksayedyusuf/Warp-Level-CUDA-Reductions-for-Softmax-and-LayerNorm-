@@ -134,74 +134,48 @@ A:\PGC-EVALUATION\
 
 ---
 
-## 5. Summary of Empirical Benchmark Results
+## 5. Summary of Empirical Benchmark Results (NVIDIA Tesla T4 GPU)
 
-Evaluation performed across standard Transformer dimensions ($M = 4096$ batch/sequence tokens) on a modern NVIDIA Ampere/Ada GPU architecture with peak theoretical bandwidth $\sim 760\text{ GB/s}$:
+The evaluation was executed directly on an **NVIDIA Tesla T4 GPU** (Turing Architecture, 16 GB GDDR6, 2560 CUDA Cores, Peak Bandwidth ~320 GB/s) for a standard Transformer tensor shape ($M = 4096$ sequence tokens, $K = 1024$ hidden dimension):
 
 ### 5.1 Softmax Performance Benchmarks
 
-| Hidden Dimension ($K$) | Kernel Variant | Latency ($\text{ms}$) | Effective Bandwidth ($\text{GB/s}$) | Speedup vs. Naive | Correctness |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **BERT-Base ($768$)** | Naive (Shared Mem) | $0.3621\text{ ms}$ | $173.81\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **BERT-Base ($768$)** | Warp Shuffle (1 Warp/Row) | $0.1389\text{ ms}$ | $453.11\text{ GB/s}$ | **$2.61\times$** | `PASS` |
-| **BERT-Base ($768$)** | Online Warp (FlashAttention) | $0.1046\text{ ms}$ | $601.76\text{ GB/s}$ | **$3.46\times$** | `PASS` |
-| **BERT-Base ($768$)** | Vectorized `float4` Warp | **$0.0889\text{ ms}$** | **$707.95\text{ GB/s}$** | **$4.07\times$** | `PASS` |
-| **Transformer ($1024$)** | Naive (Shared Mem) | $0.4428\text{ ms}$ | $189.50\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **Transformer ($1024$)** | Warp Shuffle (1 Warp/Row) | $0.1768\text{ ms}$ | $474.62\text{ GB/s}$ | **$2.50\times$** | `PASS` |
-| **Transformer ($1024$)** | Online Warp (FlashAttention) | $0.1325\text{ ms}$ | $633.34\text{ GB/s}$ | **$3.34\times$** | `PASS` |
-| **Transformer ($1024$)** | Vectorized `float4` Warp | **$0.1124\text{ ms}$** | **$746.59\text{ GB/s}$** | **$3.94\times$** | `PASS` |
-| **GPT-Medium ($2048$)** | Naive (Shared Mem) | $0.7656\text{ ms}$ | $219.20\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **GPT-Medium ($2048$)** | Warp Shuffle (Block Warp) | $0.3286\text{ ms}$ | $510.74\text{ GB/s}$ | **$2.33\times$** | `PASS` |
-| **GPT-Medium ($2048$)** | Online Warp (FlashAttention) | $0.2439\text{ ms}$ | $688.08\text{ GB/s}$ | **$3.14\times$** | `PASS` |
-| **GPT-Medium ($2048$)** | Vectorized `float4` Warp | **$0.2063\text{ ms}$** | **$813.51\text{ GB/s}$** | **$3.71\times$** | `PASS` |
-| **LLaMA-7B ($4096$)** | Naive (Shared Mem) | $1.4112\text{ ms}$ | $237.84\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **LLaMA-7B ($4096$)** | Warp Shuffle (Block Warp) | $0.6321\text{ ms}$ | $531.00\text{ GB/s}$ | **$2.23\times$** | `PASS` |
-| **LLaMA-7B ($4096$)** | Online Warp (FlashAttention) | $0.4668\text{ ms}$ | $718.99\text{ GB/s}$ | **$3.02\times$** | `PASS` |
-| **LLaMA-7B ($4096$)** | Vectorized `float4` Warp | **$0.3941\text{ ms}$** | **$851.68\text{ GB/s}$** | **$3.58\times$** | `PASS` |
-
----
+| Operation | Kernel Variant | Shape ($M \times K$) | Execution Time ($\text{ms}$) | Effective Bandwidth ($\text{GB/s}$) | Speedup vs. Naive | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Softmax** | 1. Naive (Shared Mem Tree) | $4096 \times 1024$ | $0.9731\text{ ms}$ | $34.48\text{ GB/s}$ | **$1.00\times$ (Baseline)** | `PASS` |
+| **Softmax** | 2. Warp Shuffle (1 Warp/Row) | $4096 \times 1024$ | $0.2610\text{ ms}$ | $128.56\text{ GB/s}$ | **$3.73\times$** | `PASS` |
+| **Softmax** | 3. Online Warp (1-Pass FlashAttention) | $4096 \times 1024$ | **$0.2082\text{ ms}$** | **$161.16\text{ GB/s}$** | **$4.67\times$** | `PASS` |
+| **Softmax** | 4. Vectorized Float4 Warp | $4096 \times 1024$ | $0.2528\text{ ms}$ | $132.75\text{ GB/s}$ | **$3.85\times$** | `PASS` |
 
 ### 5.2 LayerNorm Performance Benchmarks
 
-| Hidden Dimension ($K$) | Kernel Variant | Latency ($\text{ms}$) | Effective Bandwidth ($\text{GB/s}$) | Speedup vs. Naive | Correctness |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **BERT-Base ($768$)** | Naive (Shared Mem) | $0.4125\text{ ms}$ | $153.22\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **BERT-Base ($768$)** | Warp Dual-Sum (1 Warp/Row) | $0.1501\text{ ms}$ | $420.93\text{ GB/s}$ | **$2.75\times$** | `PASS` |
-| **BERT-Base ($768$)** | Welford Online Warp | $0.1218\text{ ms}$ | $518.74\text{ GB/s}$ | **$3.39\times$** | `PASS` |
-| **BERT-Base ($768$)** | Vectorized `float4` Warp | **$0.0927\text{ ms}$** | **$681.67\text{ GB/s}$** | **$4.45\times$** | `PASS` |
-| **Transformer ($1024$)** | Naive (Shared Mem) | $0.5034\text{ ms}$ | $167.31\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **Transformer ($1024$)** | Warp Dual-Sum (1 Warp/Row) | $0.1906\text{ ms}$ | $441.87\text{ GB/s}$ | **$2.64\times$** | `PASS` |
-| **Transformer ($1024$)** | Welford Online Warp | $0.1546\text{ ms}$ | $544.78\text{ GB/s}$ | **$3.26\times$** | `PASS` |
-| **Transformer ($1024$)** | Vectorized `float4` Warp | **$0.1171\text{ ms}$** | **$719.24\text{ GB/s}$** | **$4.30\times$** | `PASS` |
-| **GPT-Medium ($2048$)** | Naive (Shared Mem) | $0.8672\text{ ms}$ | $194.21\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **GPT-Medium ($2048$)** | Warp Dual-Sum (1 Warp/Row) | $0.3526\text{ ms}$ | $477.65\text{ GB/s}$ | **$2.46\times$** | `PASS` |
-| **GPT-Medium ($2048$)** | Welford Online Warp | $0.2854\text{ ms}$ | $590.11\text{ GB/s}$ | **$3.04\times$** | `PASS` |
-| **GPT-Medium ($2048$)** | Vectorized `float4` Warp | **$0.2155\text{ ms}$** | **$781.52\text{ GB/s}$** | **$4.02\times$** | `PASS` |
-| **LLaMA-7B ($4096$)** | Naive (Shared Mem) | $1.5942\text{ ms}$ | $211.28\text{ GB/s}$ | **$1.00\times$ (Ref)** | `PASS` |
-| **LLaMA-7B ($4096$)** | Warp Dual-Sum (Block Warp) | $0.6789\text{ ms}$ | $496.12\text{ GB/s}$ | **$2.35\times$** | `PASS` |
-| **LLaMA-7B ($4096$)** | Welford Online Warp | $0.5471\text{ ms}$ | $615.63\text{ GB/s}$ | **$2.91\times$** | `PASS` |
-| **LLaMA-7B ($4096$)** | Vectorized `float4` Warp | **$0.4120\text{ ms}$** | **$817.51\text{ GB/s}$** | **$3.87\times$** | `PASS` |
+| Operation | Kernel Variant | Shape ($M \times K$) | Execution Time ($\text{ms}$) | Effective Bandwidth ($\text{GB/s}$) | Speedup vs. Naive | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **LayerNorm** | 1. Naive (Shared Mem Tree) | $4096 \times 1024$ | $0.5322\text{ ms}$ | $63.06\text{ GB/s}$ | **$1.00\times$ (Baseline)** | `PASS` |
+| **LayerNorm** | 2. Warp Dual-Sum (1 Warp/Row) | $4096 \times 1024$ | $0.2083\text{ ms}$ | $161.09\text{ GB/s}$ | **$2.55\times$** | `PASS` |
+| **LayerNorm** | 3. Welford Online Warp | $4096 \times 1024$ | $0.2192\text{ ms}$ | $153.11\text{ GB/s}$ | **$2.43\times$** | `PASS` |
+| **LayerNorm** | 4. Vectorized Float4 Warp | $4096 \times 1024$ | **$0.1987\text{ ms}$** | **$168.88\text{ GB/s}$** | **$2.68\times$** | `PASS` |
 
 ---
 
-## 6. Visual Performance Charts
+## 6. Visual Performance Charts (NVIDIA Tesla T4 GPU)
 
 ### 6.1 Softmax Speedup Multiplier
 ```mermaid
 xychart-beta
-    title "Softmax Speedup Multiplier vs. Naive Baseline (4096 x 4096)"
-    x-axis ["Naive Shared Mem", "Warp Shuffle", "Online FlashAttention", "Vectorized Float4"]
-    y-axis "Speedup Multiplier" 0 --> 4.5
-    bar [1.00, 2.23, 3.02, 3.58]
+    title "Softmax Speedup Multiplier on NVIDIA Tesla T4 (4096 x 1024)"
+    x-axis ["Naive Shared Mem", "Warp Shuffle (1 Warp/Row)", "Vectorized Float4", "Online FlashAttention"]
+    y-axis "Speedup Multiplier" 0 --> 5.0
+    bar [1.00, 3.73, 3.85, 4.67]
 ```
 
 ### 6.2 LayerNorm Speedup Multiplier
 ```mermaid
 xychart-beta
-    title "LayerNorm Speedup Multiplier vs. Naive Baseline (4096 x 4096)"
-    x-axis ["Naive Shared Mem", "Warp Dual-Sum", "Welford Online Warp", "Vectorized Float4"]
-    y-axis "Speedup Multiplier" 0 --> 4.5
-    bar [1.00, 2.35, 2.91, 3.87]
+    title "LayerNorm Speedup Multiplier on NVIDIA Tesla T4 (4096 x 1024)"
+    x-axis ["Naive Shared Mem", "Welford Online", "Warp Dual-Sum", "Vectorized Float4"]
+    y-axis "Speedup Multiplier" 0 --> 3.0
+    bar [1.00, 2.43, 2.55, 2.68]
 ```
 
 ### 6.3 High-Resolution Generated Plots
