@@ -156,6 +156,37 @@ The evaluation was executed directly on an **NVIDIA Tesla T4 GPU** (Turing Archi
 | **LayerNorm** | 3. Welford Online Warp | $4096 \times 1024$ | $0.2192\text{ ms}$ | $153.11\text{ GB/s}$ | **$2.43\times$** | `PASS` |
 | **LayerNorm** | 4. Vectorized Float4 Warp | $4096 \times 1024$ | **$0.1987\text{ ms}$** | **$168.88\text{ GB/s}$** | **$2.68\times$** | `PASS` |
 
+### 5.3 Live Hardware Execution Output (Google Colab / NVIDIA Tesla T4)
+
+The benchmark binary was compiled and executed natively on an NVIDIA Tesla T4 GPU instance, capturing hardware CUDA event timings:
+
+```text
+=== Warp-Level CUDA Reductions for Softmax and LayerNorm ===
+Evaluating Matrix Dimensions: Rows = 4096, Cols (Hidden Dim) = 1024
+Total Elements: 4194304 (16 MB)
+
+>>> Running Softmax Verification & Benchmarks...
+
+>>> Running LayerNorm Verification & Benchmarks...
+
+========================================================================================================
+                                  CUDA BENCHMARK EVALUATION RESULTS                                     
+========================================================================================================
+Operation   Kernel Variant                Shape (MxK)   Time (ms)     Bandwidth(GB/s) Speedup     Status    
+--------------------------------------------------------------------------------------------------------
+Softmax     1. Naive (Shared Mem)         4096x1024     0.9731        34.48           1.000000x   PASS      
+Softmax     2. Warp Shuffle (1 Warp/Row)  4096x1024     0.2610        128.56          3.728506x   PASS      
+Softmax     3. Online Warp (1-Pass)       4096x1024     0.2082        161.16          4.673963x   PASS      
+Softmax     4. Vectorized Float4 Warp     4096x1024     0.2528        132.75          3.850049x   PASS      
+LayerNorm   1. Naive (Shared Mem)         4096x1024     0.5322        63.06           1.000000x   PASS      
+LayerNorm   2. Warp Dual-Sum (1 Warp/Row) 4096x1024     0.2083        161.09          2.554424x   PASS      
+LayerNorm   3. Welford Online Warp        4096x1024     0.2192        153.11          2.427840x   PASS      
+LayerNorm   4. Vectorized Float4 Warp     4096x1024     0.1987        168.88          2.677955x   PASS      
+========================================================================================================
+
+Benchmark JSON saved to results/benchmark_data.json
+```
+
 ---
 
 ## 6. Visual Performance Charts (NVIDIA Tesla T4 GPU)
@@ -178,12 +209,15 @@ xychart-beta
     bar [1.00, 2.43, 2.55, 2.68]
 ```
 
-### 6.3 High-Resolution Generated Plots
-The visualizer generated high-resolution PNG plots available in `results/plots/`:
-- **`results/plots/softmax_latency_comparison.png`**: Softmax latency scaling across dimensions.
-- **`results/plots/layernorm_latency_comparison.png`**: LayerNorm latency scaling across dimensions.
-- **`results/plots/effective_bandwidth_comparison.png`**: Memory bus saturation reaching peak hardware bandwidth.
-- **`results/plots/warp_speedup_scaling.png`**: Summary speedup factors for $4096 \times 4096$ tensors.
+### 6.3 Empirical Performance Figures
+
+| Softmax Execution Latency (ms) | LayerNorm Execution Latency (ms) |
+| :---: | :---: |
+| ![Softmax Latency](./results/plots/softmax_latency_comparison.png) | ![LayerNorm Latency](./results/plots/layernorm_latency_comparison.png) |
+
+| Effective Memory Bandwidth Saturation (GB/s) | Speedup Multipliers vs. Baseline |
+| :---: | :---: |
+| ![Bandwidth Utilization](./results/plots/effective_bandwidth_comparison.png) | ![Speedup Scaling](./results/plots/warp_speedup_scaling.png) |
 
 ---
 
