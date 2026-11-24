@@ -1,4 +1,4 @@
-# PGC Evaluation Experiment: Warp-Level CUDA Reductions for Softmax and LayerNorm
+#  Warp-Level CUDA Reductions for Softmax and LayerNorm
 
 **Course:** Parallel and GPU Computing (PGC)  
 **Author:** Mehak Sayed Yusuf  
