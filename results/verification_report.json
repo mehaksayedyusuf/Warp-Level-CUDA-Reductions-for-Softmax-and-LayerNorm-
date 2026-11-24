@@ -1,0 +1,25 @@
+{
+  "all_passed": true,
+  "results": {
+    "test1_warp_shuffle": {
+      "passed": true,
+      "diff_sum": 0.0,
+      "diff_max": 0.0
+    },
+    "test2_softmax_equivalence": {
+      "passed": true,
+      "max_diff": 5.960464477539063e-08
+    },
+    "test3_overflow_resistance": {
+      "passed": true
+    },
+    "test4_layernorm_equivalence": {
+      "passed": true,
+      "diff_dual": 9.5367431640625e-07,
+      "diff_welford": 7.152557373046875e-07
+    },
+    "test5_cancellation_resistance": {
+      "passed": true
+    }
+  }
+}

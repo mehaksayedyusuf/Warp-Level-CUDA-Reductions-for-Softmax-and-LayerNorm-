@@ -1,0 +1,10 @@
+*.exe
+*.obj
+*.o
+*.exp
+*.lib
+*.pdb
+*.ilk
+.matplotlib_cache/
+__pycache__/
+*.pyc
